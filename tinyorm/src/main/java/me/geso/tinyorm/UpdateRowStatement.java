@@ -27,7 +27,7 @@ import me.geso.jdbcutils.RichSQLException;
 @Slf4j
 public class UpdateRowStatement<T extends Row<?>> {
 
-	private final Object row;
+	private final T row;
 	private final Map<String, Object> set = new TreeMap<>();
 	private final Connection connection;
 	private final TableMeta<T> tableMeta;

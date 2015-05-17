@@ -92,7 +92,7 @@ class TableMeta<RowType extends Row<?>> {
 	}
 
 	static <RowType extends Row<?>> TableMeta<RowType> build(
-			Class<RowType> rowClass)
+			Class<RowType> rowClass, Map<Inflater, Class<?>> customInflaterMap, Map<Deflater, Class<?>> customDeflaterMap)
 			throws IntrospectionException {
 		BeanInfo beanInfo = Introspector.getBeanInfo(rowClass, Object.class);
 		PropertyDescriptor[] propertyDescriptors = beanInfo
@@ -218,6 +218,14 @@ class TableMeta<RowType extends Row<?>> {
 						+ " field isn't generic type.");
 				}
 			}
+
+			Class<?> fieldType = field.getType();
+			customInflaterMap.entrySet().stream()
+				.filter(entry -> entry.getValue().equals(fieldType))
+				.forEach(entry ->  inflaters.put(propertyDescriptor.getName(), entry.getKey()));
+			customDeflaterMap.entrySet().stream()
+				.filter(entry -> entry.getValue().equals(fieldType))
+				.forEach(entry -> deflaters.put(propertyDescriptor.getName(), entry.getKey()));
 
 			if (isColumn) {
 				propertyDescriptorMap.put(propertyDescriptor.getName(),

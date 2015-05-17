@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +25,8 @@ import me.geso.jdbcutils.Query;
 import me.geso.jdbcutils.QueryBuilder;
 import me.geso.jdbcutils.ResultSetCallback;
 import me.geso.jdbcutils.RichSQLException;
+import me.geso.tinyorm.trigger.Deflater;
+import me.geso.tinyorm.trigger.Inflater;
 
 /**
  * Tiny O/R Mapper implementation.
@@ -35,9 +38,17 @@ public class TinyORM implements Closeable {
 
 	private static final ConcurrentHashMap<Class<?>, TableMeta<?>> TABLE_META_REGISTRY = new ConcurrentHashMap<>();
 	private final Connection connection;
+	private final Map<Inflater, Class<?>> customInflater;
+	private final Map<Deflater, Class<?>> customDeflater;
 
 	public TinyORM(Connection connection) {
+		this(connection, Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	public TinyORM(Connection connection, Map<Inflater, Class<?>> customInflater, Map<Deflater, Class<?>> customDeflater) {
 		this.connection = connection;
+		this.customInflater = customInflater;
+		this.customDeflater = customDeflater;
 	}
 
 	public Connection getConnection() {
@@ -365,7 +376,7 @@ public class TinyORM implements Closeable {
 		return (TableMeta<T>)TABLE_META_REGISTRY.computeIfAbsent(klass, key -> {
 			log.info("Loading {}", klass);
 			try {
-				return TableMeta.build(klass);
+				return TableMeta.build(klass, customInflater, customDeflater);
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
